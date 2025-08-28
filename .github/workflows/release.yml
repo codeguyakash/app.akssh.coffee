@@ -1,48 +1,33 @@
-name: Android Debug Build
+name: Android Release with APK Upload
 
 on:
   push:
-    branches: [main]   # Trigger on every push to main branch
-  workflow_dispatch: {} # Manual trigger
+    tags:
+      - "v*"   # Runs when you push a tag like v1.0.0
+  workflow_dispatch: {}   # Manual trigger option
 
 jobs:
-  build-debug:
-    name: Build Debug APK
+  build:
+    name: Build Release APK
     runs-on: ubuntu-latest
+    permissions:
+      contents: write   # required for creating release
 
     steps:
-      - name: 📥 Checkout repository
+      - name: 📥 Checkout Repository
         uses: actions/checkout@v4
 
-      - name: ⚙️ Set up Java 17
+      - name: ☕ Setup JDK
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
           cache: gradle
 
-      - name: 🛠️ Set up Android SDK
-        uses: android-actions/setup-android@v3
+      - name: 🔨 Build Release APK
+        run: ./gradlew assembleRelease
 
-      - name: 📦 Install platform & build-tools
-        run: |
-          sdkmanager --install "platforms;android-34" "build-tools;34.0.0" "platform-tools"
-          yes | sdkmanager --licenses
-
-      - name: 🚀 Build Debug APK
-        working-directory: android
-        run: |
-          ./gradlew clean
-          ./gradlew assembleDebug
-
-      - name: 📦 Collect Debug APK
-        run: |
-          mkdir -p dist
-          cp -v android/app/build/outputs/apk/debug/*.apk dist/
-          ls -al dist
-
-      - name: 📤 Upload APK artifact
-        uses: actions/upload-artifact@v3
+      - name: 🚀 Create GitHub Release and Upload APK
+        uses: softprops/action-gh-release@v2
         with:
-          name: debug-apk
-          path: dist/*.apk
+          files: app/build/outputs/apk/release/app-release.apk
