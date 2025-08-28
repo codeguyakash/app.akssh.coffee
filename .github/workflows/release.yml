@@ -79,7 +79,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: release-apk
-          path: app/build/outputs/apk/release/*.apk
+          path: app/build/outputs/apk/release/*.apk   # ✅ all APKs
 
   release:
     name: Create GitHub Release
@@ -93,10 +93,10 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: release-apk
-          path: .
+          path: app/build/outputs/apk/release   # ✅ put back into correct folder
 
       - name: 🚀 Create GitHub Release with APK
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.version.outputs.new_tag }}
-          files: app-release.apk
+          files: app/build/outputs/apk/release/*.apk   # ✅ upload APK(s)
