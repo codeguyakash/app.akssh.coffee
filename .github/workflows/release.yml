@@ -1,0 +1,48 @@
+name: Android Debug Build
+
+on:
+  push:
+    branches: [main]   # Trigger on every push to main branch
+  workflow_dispatch: {} # Manual trigger
+
+jobs:
+  build-debug:
+    name: Build Debug APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
+
+      - name: 🛠️ Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: 📦 Install platform & build-tools
+        run: |
+          sdkmanager --install "platforms;android-34" "build-tools;34.0.0" "platform-tools"
+          yes | sdkmanager --licenses
+
+      - name: 🚀 Build Debug APK
+        working-directory: android
+        run: |
+          ./gradlew clean
+          ./gradlew assembleDebug
+
+      - name: 📦 Collect Debug APK
+        run: |
+          mkdir -p dist
+          cp -v android/app/build/outputs/apk/debug/*.apk dist/
+          ls -al dist
+
+      - name: 📤 Upload APK artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: debug-apk
+          path: dist/*.apk
