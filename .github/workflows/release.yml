@@ -16,11 +16,13 @@ jobs:
     steps:
       - name: 📥 Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # 👈 full history needed for tags
 
       - name: 🏷️ Get latest tag
         id: get_latest
         run: |
-          tag=$(git describe --tags `git rev-list --tags --max-count=1`)
+          tag=$(git tag --sort=-v:refname | head -n 1)
           echo "latest_tag=$tag" >> $GITHUB_OUTPUT
 
       - name: 🔢 Bump patch version
@@ -86,10 +88,10 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: release-apk
-          path: .
+          path: ./release
 
       - name: 🚀 Create GitHub Release with APK
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.version.outputs.new_tag }}
-          files: app-release.apk
+          files: ./release/app-release.apk
